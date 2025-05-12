@@ -1,0 +1,8 @@
+streamlit
+pandas
+plotly
+seaborn
+matplotlib
+pytz
+pyodbc
+sqlalchemy
