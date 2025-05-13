@@ -74,13 +74,24 @@ merged_df = pd.merge(
     right_on='cycle_start_time'
 )
 
+# Columns already present in merged_df
+existing_cols = set(merged_df.columns)
+
+# Drop overlapping columns from filtered_channel_df before the second merge
+# (excluding the key used for merge)
+columns_to_drop = [col for col in filtered_channel_df.columns if col in existing_cols and col != 'cycle_start_time_5min']
+filtered_channel_df_cleaned = filtered_channel_df.drop(columns=columns_to_drop)
+
+# Now do the final merge
 final_merged_df = pd.merge(
     merged_df,
-    filtered_channel_df,
+    filtered_channel_df_cleaned,
     left_on='Device Date/Time',
     right_on='cycle_start_time_5min',
     how='inner'
 )
+
+final_merged_df.to_csv("final_merged_df.csv", index=False)
 
 # Dashboard Title
 st.title("EX3600 Excavator - Fuel Use & Emission Dashboard")
