@@ -4,21 +4,10 @@ import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pytz
-import pyodbc
-import sqlalchemy as sa
-# import pyodbc
-# import sqlalchemy as sa
 from datetime import datetime, time
 import plotly.figure_factory as ff
 
 st.set_page_config(layout="wide")
-
-connection_string = "DRIVER={SQL Server};server=PRDNCRT-AGL1.ad.monash.edu;database=ENG-MTI01-SMSEXCAVATORS"
-connection_url = sa.engine.URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
-engine = sa.create_engine(connection_url)
-# connection_string = "DRIVER={SQL Server};server=PRDNCRT-AGL1.ad.monash.edu;database=ENG-MTI01-SMSEXCAVATORS"
-# connection_url = sa.engine.URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
-# engine = sa.create_engine(connection_url)
 
 @st.cache_data
 def load_data():
@@ -39,54 +28,6 @@ start_datetime = datetime.combine(start_date, start_time_input)
 end_datetime = datetime.combine(end_date, end_time_input)
 
 df_filtered = df[(df['Device Date/Time'] >= start_datetime) & (df['Device Date/Time'] <= end_datetime)]
-
-channel_summary_query = """
-SELECT [machine_code], [cycle_start_time], [channel_code], [min_stress],
-       [max_stress], [life], [damage]
-FROM [ENG-MTI01-SMSEXCAVATORS].[dbo].[channel_summary_tab]
-WHERE machine_code = 'RTIO_MJ_15H225' AND channel_code like 'SG%'
-  AND cycle_start_time BETWEEN '2025-05-01 00:00:00.000' AND '2025-05-07 00:00:00.000'
-"""
-
-payload_query = """
-SELECT [machine_code], [cycle_start_time], [cycle_end_time], [cycle_time], [avg_payload]
-FROM [ENG-MTI01-SMSEXCAVATORS].[dbo].[payload_cycle_summary_tab]
-WHERE machine_code = 'RTIO_MJ_15H225'
-  AND cycle_start_time BETWEEN '2025-05-01 00:00:00.000' AND '2025-05-07 00:00:00.000'
-  and avg_payload between '10' and '60'
-"""
-
-with engine.connect() as conn:
-    result = conn.execute(sa.text(channel_summary_query))
-    channel_summary_tab = pd.DataFrame(result.fetchall(), columns=result.keys())
-
-with engine.connect() as conn:
-    result = conn.execute(sa.text(payload_query))
-    payload_df = pd.DataFrame(result.fetchall(), columns=result.keys())
-# channel_summary_query = """
-# SELECT [machine_code], [cycle_start_time], [channel_code], [min_stress],
-#        [max_stress], [life], [damage]
-# FROM [ENG-MTI01-SMSEXCAVATORS].[dbo].[channel_summary_tab]
-# WHERE machine_code = 'RTIO_MJ_15H225' AND channel_code like 'SG%'
-#   AND cycle_start_time BETWEEN '2025-05-01 00:00:00.000' AND '2025-05-07 00:00:00.000'
-# """
-
-# payload_query = """
-# SELECT [machine_code], [cycle_start_time], [cycle_end_time], [cycle_time], [avg_payload]
-# FROM [ENG-MTI01-SMSEXCAVATORS].[dbo].[payload_cycle_summary_tab]
-# WHERE machine_code = 'RTIO_MJ_15H225'
-#   AND cycle_start_time BETWEEN '2025-05-01 00:00:00.000' AND '2025-05-07 00:00:00.000'
-#   and avg_payload between '10' and '60'
-# """
-
-# with engine.connect() as conn:
-#     result = conn.execute(sa.text(channel_summary_query))
-#     channel_summary_tab = pd.DataFrame(result.fetchall(), columns=result.keys())
-
-# with engine.connect() as conn:
-#     result = conn.execute(sa.text(payload_query))
-#     payload_df = pd.DataFrame(result.fetchall(), columns=result.keys())
-
 
 payload_df = pd.read_csv("payload_df.csv", parse_dates=['cycle_start_time'])
 channel_summary_tab = pd.read_csv("channel_summary_tab.csv", parse_dates=['cycle_start_time'])
